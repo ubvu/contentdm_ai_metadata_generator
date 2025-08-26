@@ -1,0 +1,36 @@
+
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "ContentDM AI Metadata Generator"
+abstract: "An intelligent Streamlit application that generates enhanced metadata for ContentDM digital collections using AI technologies including image captioning, OCR, and Named Entity Recognition with linked data."
+authors:
+  - family-names: "Vanderfeesten"
+    given-names: "Maurice"
+    orcid: "https://orcid.org/0000-0001-6397-4759"
+    affiliation: "Digital Humanities Researcher"
+repository-code: "https://github.com/your-username/contentdm-ai-generator"
+url: "https://github.com/your-username/contentdm-ai-generator"
+license: MIT
+version: "1.0.0"
+date-released: "2024-08-26"
+keywords:
+  - "digital humanities"
+  - "metadata enhancement"
+  - "artificial intelligence"
+  - "contentdm"
+  - "cultural heritage"
+  - "image captioning"
+  - "named entity recognition"
+  - "linked data"
+  - "dublin core"
+  - "streamlit"
+preferred-citation:
+  type: software
+  title: "ContentDM AI Metadata Generator: Enhancing Digital Cultural Heritage with Artificial Intelligence"
+  authors:
+    - family-names: "Vanderfeesten"
+      given-names: "Maurice"
+      orcid: "https://orcid.org/0000-0001-6397-4759"
+  year: 2024
+  url: "https://github.com/your-username/contentdm-ai-generator"

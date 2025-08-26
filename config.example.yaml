@@ -1,0 +1,49 @@
+
+# ContentDM AI Metadata Generator Configuration
+
+# ContentDM API Configuration
+contentdm:
+  base_url: "https://vu.contentdm.oclc.org"
+  api_endpoint: "/digital/bl/dmwebservices/index.php"
+  default_collection: "vko"
+  timeout: 30
+  max_retries: 3
+
+# AI Processing Configuration
+ai_models:
+  image_captioning:
+    model_name: "Salesforce/blip-image-captioning-base"
+    device: "auto"  # auto, cpu, cuda
+    max_length: 100
+    num_beams: 4
+    
+  ocr:
+    engine: "tesseract"
+    lang: "eng"
+    config: "--psm 6"
+    
+  ner:
+    model: "en_core_web_sm"
+    enable_wikidata: true
+    enable_dbpedia: true
+    confidence_threshold: 0.7
+
+# Data Export Configuration
+export:
+  output_dir: "outputs"
+  csv_encoding: "utf-8"
+  include_thumbnails: true
+  zip_compression: true
+  
+# Processing Configuration
+processing:
+  batch_size: 10
+  max_workers: 4
+  enable_caching: true
+  cache_dir: ".cache"
+  
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "contentdm_ai.log"
