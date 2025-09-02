@@ -4,9 +4,15 @@ IFrame Monitor Component
 Handles ContentDM website embedding and URL monitoring
 """
 
-import streamlit as st
-import streamlit.components.v1 as components
-from streamlit_autorefresh import st_autorefresh
+try:
+    import streamlit as st
+    import streamlit.components.v1 as components
+    from streamlit_autorefresh import st_autorefresh
+except Exception:
+    st = None  # type: ignore
+    components = None  # type: ignore
+    def st_autorefresh(*args, **kwargs):  # type: ignore
+        return None
 from typing import Optional
 import re
 import time

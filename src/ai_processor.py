@@ -5,17 +5,15 @@ Handles image captioning, OCR, and Named Entity Recognition with linked data
 """
 
 import logging
-import torch
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any, Callable, Tuple
 from PIL import Image
-import cv2
-import numpy as np
-import pytesseract
-import spacy
-from transformers import BlipProcessor, BlipForConditionalGeneration
 import requests
 import json
-from SPARQLWrapper import SPARQLWrapper, JSON
+try:
+    from SPARQLWrapper import SPARQLWrapper, JSON  # type: ignore
+except Exception:
+    SPARQLWrapper = None  # type: ignore
+    JSON = None  # type: ignore
 import re
 import time
 
@@ -49,12 +47,19 @@ class AIProcessor:
         device_config = self.image_config.get('device', 'auto')
         
         if device_config == 'auto':
-            if torch.cuda.is_available():
-                device = 'cuda'
-                self.logger.info("Using CUDA GPU for AI processing")
-            else:
+            # Lazy import torch to avoid hard dependency at import time
+            try:
+                import torch  # type: ignore
+                if torch.cuda.is_available():
+                    device = 'cuda'
+                    self.logger.info("Using CUDA GPU for AI processing")
+                else:
+                    device = 'cpu'
+                    self.logger.info("Using CPU for AI processing")
+            except Exception:
+                # Torch not available; fall back to CPU gracefully
                 device = 'cpu'
-                self.logger.info("Using CPU for AI processing")
+                self.logger.info("Torch not available; defaulting to CPU")
         else:
             device = device_config
             self.logger.info(f"Using configured device: {device}")
@@ -91,12 +96,28 @@ class AIProcessor:
             
             self.logger.info(f"Loading BLIP model: {model_name}")
             
+            # Lazy import heavy deps
+            try:
+                from transformers import BlipProcessor, BlipForConditionalGeneration  # type: ignore
+            except Exception as e:
+                self.logger.error(f"transformers library not available: {e}")
+                return False
+
+            try:
+                import torch  # type: ignore
+            except Exception:
+                torch = None  # type: ignore
+
             self.blip_processor = BlipProcessor.from_pretrained(model_name)
             self.blip_model = BlipForConditionalGeneration.from_pretrained(model_name)
             
             # Move model to device
-            if self.device == 'cuda' and torch.cuda.is_available():
-                self.blip_model = self.blip_model.to('cuda')
+            try:
+                if self.device == 'cuda' and hasattr(torch, 'cuda') and torch.cuda.is_available():  # type: ignore[attr-defined]
+                    self.blip_model = self.blip_model.to('cuda')
+            except Exception:
+                # If torch is missing or CUDA not available, continue on CPU
+                pass
             
             self.logger.info("BLIP model loaded successfully")
             return True
@@ -114,6 +135,7 @@ class AIProcessor:
             
             # Try to load the model
             try:
+                import spacy  # type: ignore
                 self.nlp = spacy.load(model_name)
             except OSError:
                 # Model not found, try to download it
@@ -122,6 +144,7 @@ class AIProcessor:
                 result = subprocess.run(['python', '-m', 'spacy', 'download', model_name], 
                                       capture_output=True, text=True)
                 if result.returncode == 0:
+                    import spacy  # type: ignore
                     self.nlp = spacy.load(model_name)
                 else:
                     self.logger.error(f"Failed to download spaCy model: {result.stderr}")
@@ -211,10 +234,21 @@ class AIProcessor:
             
             # Move to device
             if self.device == 'cuda':
-                inputs = {k: v.to('cuda') for k, v in inputs.items()}
+                try:
+                    inputs = {k: v.to('cuda') for k, v in inputs.items()}
+                except Exception:
+                    # If CUDA not available, keep on CPU
+                    pass
             
             # Generate caption
-            with torch.no_grad():
+            try:
+                import torch  # type: ignore
+                ctx = torch.no_grad()
+            except Exception:
+                import contextlib
+                ctx = contextlib.nullcontext()
+
+            with ctx:
                 out = self.blip_model.generate(
                     **inputs,
                     max_length=self.image_config.get('max_length', 100),
@@ -236,6 +270,15 @@ class AIProcessor:
     def extract_text(self, image: Image.Image) -> Optional[str]:
         """Extract text from image using OCR"""
         try:
+            # Lazy import OCR dependencies
+            try:
+                import numpy as np  # type: ignore
+                import cv2  # type: ignore
+                import pytesseract  # type: ignore
+            except Exception as e:
+                self.logger.warning(f"OCR dependencies not available: {e}")
+                return None
+
             # Convert PIL image to numpy array for OpenCV
             img_array = np.array(image)
             
@@ -341,8 +384,11 @@ class AIProcessor:
     def _get_wikidata_uri(self, entity_text: str, entity_type: str) -> Optional[str]:
         """Get Wikidata URI for entity using SPARQL"""
         try:
+            if SPARQLWrapper is None:
+                return None
             sparql = SPARQLWrapper(self.wikidata_endpoint)
-            sparql.setReturnFormat(JSON)
+            if JSON is not None:
+                sparql.setReturnFormat(JSON)
             
             # Construct SPARQL query based on entity type
             if entity_type in ['PERSON']:
@@ -539,8 +585,12 @@ class AIProcessor:
                 del self.blip_processor
                 self.blip_processor = None
             
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            try:
+                import torch  # type: ignore
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except Exception:
+                pass
             
             self.models_loaded = False
             self.logger.info("AI models cleaned up")

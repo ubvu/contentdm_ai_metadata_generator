@@ -5,7 +5,6 @@ Handles CSV export, JSON data packages, and file organization
 """
 
 import logging
-import pandas as pd
 import json
 import os
 from pathlib import Path
@@ -14,7 +13,6 @@ import zipfile
 import yaml
 from datetime import datetime
 import uuid
-from datapackage import Package
 import csv
 
 class DataManager:
@@ -38,6 +36,7 @@ class DataManager:
                      ai_results: Dict[str, Any]) -> bool:
         """Save individual item data as CSV file"""
         try:
+            import pandas as pd  # type: ignore
             # Create collection directory
             collection_dir = self.output_dir / collection
             collection_dir.mkdir(parents=True, exist_ok=True)
@@ -186,6 +185,7 @@ class DataManager:
                                 processing_results: Dict[str, Dict[str, Any]]) -> Optional[str]:
         """Create data package for entire collection"""
         try:
+            import pandas as pd  # type: ignore
             # Create package directory
             package_dir = self.output_dir / "packages" / f"collection_{collection}"
             package_dir.mkdir(parents=True, exist_ok=True)
@@ -279,6 +279,7 @@ class DataManager:
     def _create_combined_csv(self, data_dir: Path, output_path: Path):
         """Combine all CSV files in directory into one"""
         try:
+            import pandas as pd  # type: ignore
             csv_files = list(data_dir.glob("*_metadata.csv"))
             if not csv_files:
                 return

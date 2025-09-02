@@ -1,5 +1,5 @@
 
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libglib2.0-0 \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*

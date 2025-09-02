@@ -1,0 +1,29 @@
+
+streamlit
+streamlit-autorefresh
+# streamlit-components-template
+requests
+pandas
+numpy
+Pillow
+opencv-python-headless
+pytesseract
+spacy
+transformers
+torch
+torchvision
+datasets
+accelerate
+scipy
+matplotlib
+seaborn
+pyyaml
+datapackage
+SPARQLWrapper
+wikidata
+# dbpedia-spotlight
+tqdm
+zipfile38
+beautifulsoup4
+lxml
+httpx

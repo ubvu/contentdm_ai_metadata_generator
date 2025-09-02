@@ -302,6 +302,30 @@ class ContentDMAPI:
             return metadata is not None and not metadata.get('error')
         except Exception:
             return False
+
+    def _parse_contentdm_url(self, url: str) -> Tuple[Optional[str], Optional[str]]:
+        """Extract collection alias and item id from a ContentDM item URL.
+
+        Supports common patterns like:
+        - https://site.contentdm.oclc.org/digital/collection/alias/id/123
+        - https://site.contentdm.oclc.org/digital/collection/alias/id/123/rec/1
+        - ...?collection=alias&id=123
+        """
+        try:
+            import re as _re
+
+            patterns = [
+                r"/collection/([^/]+)/id/(\d+)",
+                r"/digital/collection/([^/]+)/id/(\d+)",
+                r"[?&]collection=([^&]+).*?[?&]id=(\d+)",
+            ]
+            for pat in patterns:
+                m = _re.search(pat, url)
+                if m:
+                    return m.group(1), m.group(2)
+            return None, None
+        except Exception:
+            return None, None
     
     def get_collection_list(self) -> List[Dict[str, Any]]:
         """Get list of all available collections using dmGetCollectionList"""

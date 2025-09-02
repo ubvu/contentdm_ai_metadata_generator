@@ -4,10 +4,14 @@ Processing Log Component
 Displays expandable log of AI processing steps and status updates
 """
 
-import streamlit as st
+try:
+    import streamlit as st
+except Exception:  # Allow import without Streamlit for tests
+    class _Stub:
+        session_state = {}
+    st = _Stub()  # type: ignore
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-import pandas as pd
 
 class ProcessingLog:
     """Interactive processing log for Streamlit"""
@@ -208,21 +212,30 @@ class ProcessingLog:
     
     def _create_download_log(self, entries: List[Dict[str, Any]]):
         """Create downloadable log file"""
-        
-        # Convert to DataFrame
-        log_data = []
+        # Prepare data rows
+        rows = []
         for entry in entries:
-            log_data.append({
+            rows.append({
                 'Timestamp': entry['timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
                 'Level': entry['level'],
                 'Message': entry['message'],
                 'Details': str(entry.get('details', ''))
             })
-        
-        df = pd.DataFrame(log_data)
-        
-        # Convert to CSV
-        csv_data = df.to_csv(index=False)
+
+        # Try pandas first for convenience; fall back to csv
+        csv_data: str
+        try:
+            import pandas as pd  # type: ignore
+            df = pd.DataFrame(rows)
+            csv_data = df.to_csv(index=False)
+        except Exception:
+            import io, csv as _csv
+            buf = io.StringIO()
+            if rows:
+                writer = _csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
+                writer.writeheader()
+                writer.writerows(rows)
+            csv_data = buf.getvalue()
         
         # Create download button
         filename = f"processing_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
